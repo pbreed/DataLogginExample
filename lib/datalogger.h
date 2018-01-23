@@ -83,9 +83,10 @@ public:
 };
 
 
-class INTROADDR
+class ipaddr_element
 {IPADDR val;
- INTROADDR(const char * label) {val=0; if(IntrospecObject::bShowMe) IntrospecObject::Element(this,sizeof(*this),label,'A'); };
+public:
+	ipaddr_element(const char * label) {val=0; if(IntrospecObject::bShowMe) IntrospecObject::Element(this,sizeof(*this),label,'A'); };
  inline IPADDR operator=(IPADDR rhs) { val = rhs; return rhs;}
  inline operator IPADDR() const { return val; }
 };
@@ -116,7 +117,6 @@ int GetLogSize();
 extern volatile bool bLog;					
 
 void LogFileVersions();
-void LogAppRecords();
 
 class FileLog
 {

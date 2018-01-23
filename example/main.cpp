@@ -47,6 +47,8 @@
 #include <ctype.h>
 #include <tcp.h>
 #include <init.h>
+#include "../lib/datalogger.h"
+
 
 const char* AppName = "TCP Multiple Sockets Example";
 
@@ -55,9 +57,61 @@ const char* AppName = "TCP Multiple Sockets Example";
 
 int fd_array[NFDS]; // Array of TCP file descriptors
 
+
+
+LOGFILEINFO;//Force the file info into the log 
+
+
+
+
+//Now build the four objects that will be logged....
+
+START_INTRO_OBJ(TCPConnectObj,"TCPConnect")
+uint16_element hisport  {"hisport"};
+uint16_element thefdnum {"fdn"};
+uint16_element theaindx {"aindex"};
+ipaddr_element hisaddr  {"hisaddr"};
+END_INTRO_OBJ;
+
+
+START_INTRO_OBJ(TCPCloseObj,"TCPClose")
+uint16_element thefdnum {"fdn"};
+uint16_element theaindx {"aindex"};
+int32_element  errorwhy{"why"};
+END_INTRO_OBJ;
+
+START_INTRO_OBJ(TCPReadObj,"TCPRead")
+uint16_element thefdnum {"fdn"};
+uint16_element theaindx {"aindex"};
+int32_element  nread{"nread"};
+END_INTRO_OBJ;
+
+START_INTRO_OBJ(TimeLogObj,"SecTick")
+uint32_element sec {"sec"};
+END_INTRO_OBJ;
+
+
+
+
+
+TCPConnectObj TheTcpConnectObject;
+TCPCloseObj   TheTcpCloseObject;
+TCPReadObj   TheTcpCloseObject;
+TimeLogObj   TimeLogObj;
+
+
 extern "C" void UserMain( void* pd )
 {
     init();
+
+
+	InitLogFtp(MAIN_PRIO-1); //Start the FTP server that will serve the log file 
+	LogFileVersions(); //Log the version of the included files in the log
+
+	bLog=true; //Start recording, you can turn log recording on/off to record special events.
+
+
+
 
     /*
       Listen for incoming TCP connections. You only need to call
@@ -122,6 +176,19 @@ extern "C" void UserMain( void* pd )
                         iprintf( "Added connection on fd[%d] = %d, ", i, fda );
                         ShowIP(client_ip);
                         iprintf(":%d\n", client_port);
+						
+						
+						//Record the value in the structure and then log them.
+						TheTcpConnectObject.hisport=client_port;
+						TheTcpConnectObject.hisaddr=client_ip; 
+						TheTcpConnectObject.thefdnum=fda;
+						TheTcpConnectObject.theaindx=i;
+						TheTcpConnectObject.Log();
+
+
+
+
+
                         fda = 0;
                         break;
                     }
@@ -162,6 +229,11 @@ extern "C" void UserMain( void* pd )
                         {
                             iprintf( "Closing connection fd[%d]\r\n", i );
                             writestring( fd_array[i], "Bye\r\n" );
+
+							TheTcpCloseObject.thefdnum=	fd_array[i];
+							TheTcpCloseObject.theaindx=i;
+							TheTcpCloseObject.errorwhy=0;
+							TheTcpCloseObject.Log();
                             close( fd_array[i] );
                             fd_array[i] = 0;
                         }
@@ -183,6 +255,10 @@ extern "C" void UserMain( void* pd )
                 if ( FD_ISSET( fd_array[i], &error_fds ) )
                 {
                     iprintf( "Error on fd[%d], closing connection\r\n", i );
+					TheTcpCloseObject.thefdnum=	fd_array[i];
+					TheTcpCloseObject.theaindx=i;
+					TheTcpCloseObject.errorwhy=getsocketerror(fd_array[i]);
+					TheTcpCloseObject.Log();
                     close( fd_array[i] );
                     fd_array[i] = 0;
                 }

@@ -11,6 +11,7 @@
 #include <ucos.h>
 #include <ucosmcfc.h>
 #include <iointernal.h>
+#include <constants.h>
 #include "datalogger.h"
 
 LOGFILEINFO;
@@ -30,7 +31,7 @@ LOGFILEINFO;
 
 volatile bool bLog;					
 
-
+bool IntrospecObject::bShowMe;
 
 #define LOG_SIZE (1024*1024*16)
 

@@ -28,6 +28,7 @@ NAME = TcpMultiSocket
 
 CXXSRCS = \
 	main.cpp \
+	../lib/datalogger.cpp
 
 CSRCS = \
 
